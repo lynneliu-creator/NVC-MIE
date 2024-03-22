@@ -32,5 +32,6 @@ To test the learned target model
 ```
 python test_comparison.py --model_dir 'your checkpoint directory for the target model'
 ```
-
+More inference on learning MI to improve adversarial robustness:
+[Improving Adversarial Robustness via Mutual Information Estimation](https://github.com/dwDavidxd/MIAT)
 
