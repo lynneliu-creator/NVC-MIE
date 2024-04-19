@@ -24,7 +24,7 @@ from compute_MI import compute_loss
 parser = argparse.ArgumentParser(description='PyTorch TinyImageNet MI AT')
 
 parser = argparse.ArgumentParser(description='PyTorch TinyImageNet MI estimator')
-parser.add_argument('--data-dir', default='../MI_project/data/cifar10/',
+parser.add_argument('--data-dir', default='./data/cifar10/',
                     help='path to dataset CIFAR-10')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
@@ -40,7 +40,7 @@ parser.add_argument('--num-steps', default=10,
 parser.add_argument('--step-size', default=0.125,
                     help='perturb step size')
 
-parser.add_argument('--pre-target', default='./tiny/tiny_l2_adv_RN34.pth',#'../MI_project/checkpoint/resnet_18/PGD_l_inf.pth', |PGD_l2.pth
+parser.add_argument('--pre-target', default='./cifar10/cifar10_l2_adv.pth',#'../MI_project/checkpoint/resnet_18/PGD_l_inf.pth', |PGD_l2.pth
         help='directory of model for saving checkpoint')
 
 parser.add_argument('--va-mode', choices=['nce', 'fd', 'dv','copula'], default='copula')
@@ -51,7 +51,7 @@ parser.add_argument('--is_internal_last', type=bool, default=False)
 
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--model-dir', default='./checkpoint/tiny/copula/estim_l2',
+parser.add_argument('--model-dir', default='./checkpoint/cifar10/copula_estim_l2',
                     help='directory of model for saving checkpoint')
 parser.add_argument('--print_freq', default=50, type=int)
 parser.add_argument('--save-freq', default=1, type=int, metavar='N', help='save frequency')
@@ -411,7 +411,7 @@ def eval_test(model, device, test_loader, local_n, global_n, local_a, global_a):
 def main():
     # settings
     setup_seed(args.seed)
-    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "5,6,7"
 
     if not os.path.exists(args.model_dir):
         os.makedirs(args.model_dir)
@@ -427,7 +427,7 @@ def main():
     trans_test = transforms.Compose([
         transforms.ToTensor()
     ])
-    '''
+    
   # 将CIFAR10数据集下载到本地：共有三份文件，标签说明文件batches.meta，训练样本集data_batch_x(一共五个，包含10000条训练样本)，测试样本test.batch
     trainset = CIFAR10(args.data_dir,train=True,download=False,transform=trans_train)
     train_loader = DataLoader(trainset,batch_size=args.batch_size,shuffle=True,drop_last=True,pin_memory=torch.cuda.is_available())
@@ -442,6 +442,7 @@ def main():
     testset = TinyImageNetDataset(root="./",mode='val' ,download=False,transform=trans_test)
     test_loader = DataLoader(testset,batch_size=args.batch_size,shuffle=True,drop_last=True,pin_memory=torch.cuda.is_available())
     print("测试样本个数：",len(testset)) 
+    '''
     # load MI estimation model
 
     # Estimator part 1: X or layer3 to H space
@@ -459,12 +460,12 @@ def main():
             global_n = MIInternalConvNet(z_size, args.va_hsize)
             global_a = MIInternalConvNet(z_size, args.va_hsize)
     else:
-        z_size = 200
+        z_size =10
         global_n = MI1x1ConvNet(z_size, args.va_hsize)
         global_a = MI1x1ConvNet(z_size, args.va_hsize)
 
     print('----------------Start training-------------')
-    target_model = ResNet34(200)
+    target_model = ResNet18(10)
 
     state_dic = torch.load(args.pre_target)
     new_state = target_model.state_dict()
@@ -501,8 +502,8 @@ def main():
             data, target = data.to(device), target.to(device)
 
             # craft adversarial examples
-            adv = craft_adversarial_example_pgd(model=target_model, x_natural=data, y=target, step_size=0.007,
-                epsilon=0.031, perturb_steps=20, distance='l_inf')
+            adv = craft_adversarial_example_pgd(model=target_model, x_natural=data, y=target, step_size=0.125,
+                epsilon=0.5, perturb_steps=20, distance='l_2')
 
             # Train MI estimator
             loss_n = MI_loss_nat(i=batch_idx, model=target_model, x_natural=data, y=target, x_adv=adv,

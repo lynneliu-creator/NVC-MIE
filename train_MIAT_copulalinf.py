@@ -19,7 +19,7 @@ from models.resnet_new import ResNet18,ResNet34
 from models.estimator import Estimator
 from models.discriminators import MI1x1ConvNet, MIInternalConvNet, MIInternallastConvNet
 from compute_MI import compute_loss
-from ImageNet import data_loader
+#from ImageNet import data_loader
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR MI AT')
 
@@ -38,11 +38,11 @@ parser.add_argument('--weight-decay', '--wd', default=2e-4,
 parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
                     help='SGD momentum')
 
-parser.add_argument('--epsilon', default=0.5,# 8/255
+parser.add_argument('--epsilon', default=0.031,# 8/255
                     help='perturbation')
 parser.add_argument('--num-steps', default=10,
                     help='perturb number of steps')
-parser.add_argument('--step-size', default=0.125,#0.007
+parser.add_argument('--step-size', default=0.007,#0.007
                     help='perturb step size')
 
 parser.add_argument('--warm-up', type=bool, default=True,
@@ -53,13 +53,13 @@ parser.add_argument('--warm-epochs', type=int, default=20, metavar='N',
 parser.add_argument('--pretrain-model', default='../MI_project/checkpoint/resnet_18/PGD_l2.pth',
                     help='directory of model for saving checkpoint')
 '''
-parser.add_argument('--pre-local-n', default='./checkpoint/tiny/copula/estim_l2/local_n_model.pth',#'./checkpoint/cifar10/copula/estim_l2/local_n_model.pth',
+parser.add_argument('--pre-local-n', default='./checkpoint/cifar10/copula_estim_linf/local_n_model.pth',#'./checkpoint/cifar10/copula/estim_l2/local_n_model.pth',
                     help='directory of model for saving checkpoint')
-parser.add_argument('--pre-global-n', default='./checkpoint/tiny/copula/estim_l2/global_n_model.pth',
+parser.add_argument('--pre-global-n', default='./checkpoint/cifar10/copula_estim_linf/global_n_model.pth',
                     help='directory of model for saving checkpoint')
-parser.add_argument('--pre-local-a', default='./checkpoint/tiny/copula/estim_l2/local_a_model.pth',
+parser.add_argument('--pre-local-a', default='./checkpoint/cifar10/copula_estim_linf/local_a_model.pth',
                     help='directory of model for saving checkpoint')
-parser.add_argument('--pre-global-a', default='./checkpoint/tiny/copula/estim_l2/global_a_model.pth',
+parser.add_argument('--pre-global-a', default='./checkpoint/cifar10/copula_estim_linf/global_a_model.pth',
                     help='directory of model for saving checkpoint')
 
 parser.add_argument('--va-mode', choices=['nce', 'fd', 'dv','copula'], default='copula')
@@ -70,7 +70,7 @@ parser.add_argument('--is_internal_last', type=bool, default=False)
 
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--model-dir', default='./checkpoint/tiny/copula/CE_l2_RN34',
+parser.add_argument('--model-dir', default='./checkpoint/cifar10/CE_linf_alpha5',
                     help='directory of model for saving checkpoint')
 parser.add_argument('--print_freq', type=int, default=50)
 parser.add_argument('--save-freq', default=2, type=int, metavar='N', help='save frequency')
@@ -430,7 +430,7 @@ def eval_test(model, device, test_loader, local_n, global_n, local_a, global_a):
 def main():
     # settings
     setup_seed(args.seed)
-    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
     if not os.path.exists(args.model_dir):
         os.makedirs(args.model_dir)
@@ -478,7 +478,7 @@ def main():
             global_n = MIInternalConvNet(z_size, args.va_hsize)
             global_a = MIInternalConvNet(z_size, args.va_hsize)
     else:
-        z_size = 200
+        z_size = 10
         global_n = MI1x1ConvNet(z_size, args.va_hsize)
         global_a = MI1x1ConvNet(z_size, args.va_hsize)
 
